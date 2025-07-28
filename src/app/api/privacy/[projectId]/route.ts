@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { getWhatsAppConfig } from '@/lib/firebase-utils';
 
 export async function GET(
   request: NextRequest,
@@ -20,6 +21,10 @@ export async function GET(
     const projectData = projectSnap.data();
     const projectName = projectData.name || 'Business';
     const projectDescription = projectData.description || '';
+    
+    // Fetch WhatsApp configuration for contact info
+    const whatsappConfig = await getWhatsAppConfig(projectId);
+    
     const updatedAt = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -30,7 +35,8 @@ export async function GET(
       projectName,
       projectDescription,
       updatedAt,
-      projectId
+      projectId,
+      whatsappConfig
     });
     
     return new NextResponse(privacyPolicyContent, {
@@ -50,13 +56,19 @@ interface PrivacyPolicyParams {
   projectDescription: string;
   updatedAt: string;
   projectId: string;
+  whatsappConfig?: {
+    phoneNumberId: string;
+    businessAccountId: string;
+    isConfigured: boolean;
+  } | null;
 }
 
 function generatePrivacyPolicy({
   projectName,
   projectDescription,
   updatedAt,
-  projectId
+  projectId,
+  whatsappConfig
 }: PrivacyPolicyParams): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -251,13 +263,20 @@ function generatePrivacyPolicy({
         <p>For questions about this Privacy Policy, to exercise your data rights, or for any privacy-related concerns:</p>
         
         <p><strong>${projectName}</strong><br>
-        <strong>WhatsApp:</strong> [Configure in project settings]<br>
+        ${whatsappConfig?.isConfigured 
+          ? `<strong>WhatsApp Business:</strong> Connected (Phone Number ID: ${whatsappConfig.phoneNumberId})<br>
+             <strong>Business Account:</strong> ${whatsappConfig.businessAccountId}<br>`
+          : '<strong>WhatsApp:</strong> [Configure in project settings]<br>'
+        }
         <strong>Email:</strong> [Configure in project settings]<br>
         <strong>Address:</strong> [Configure in project settings]</p>
         
         <p><strong>Data Protection Officer:</strong> [Configure in project settings]</p>
         
-        <p><em>Note: Contact information can be configured in the project settings of your admin panel.</em></p>
+        ${whatsappConfig?.isConfigured 
+          ? '<p><em>Note: WhatsApp Business information is automatically configured from your project settings. Other contact information can be configured in the project settings of your admin panel.</em></p>'
+          : '<p><em>Note: Contact information can be configured in the project settings of your admin panel.</em></p>'
+        }
     </div>
     
     <h2>Legal Compliance</h2>
@@ -269,12 +288,6 @@ function generatePrivacyPolicy({
         <li>Meta's Platform Policies and Terms</li>
         <li>Other applicable local and international data protection laws</li>
     </ul>
-    
-    <div class="highlight">
-        <p><strong>Generated for:</strong> ${projectName}</p>
-        <p><strong>Project ID:</strong> ${projectId}</p>
-        <p><strong>Generated on:</strong> ${updatedAt}</p>
-    </div>
     
     <hr style="margin: 40px 0; border: none; border-top: 1px solid #ddd;">
     
