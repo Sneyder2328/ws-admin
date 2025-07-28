@@ -269,11 +269,6 @@ function generatePrivacyPolicy({
         <strong>Address:</strong> [Configure in project settings]</p>
         
         <p><strong>Data Protection Officer:</strong> [Configure in project settings]</p>
-        
-        ${whatsappConfig?.isConfigured 
-          ? '<p><em>Note: WhatsApp Business information is automatically configured from your project settings. Other contact information can be configured in the project settings of your admin panel.</em></p>'
-          : '<p><em>Note: Contact information can be configured in the project settings of your admin panel.</em></p>'
-        }
     </div>
     
     <h2>Legal Compliance</h2>
