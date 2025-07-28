@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LogOut, MessageSquare, Settings, User, Loader2 } from 'lucide-react';
 import { ProjectSelector } from '@/components/project-selector';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React from 'react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -25,8 +26,17 @@ interface AdminLayoutProps {
 function AdminLayoutContent({ children }: AdminLayoutProps) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+
+  // Sync selectedProjectId with URL parameters
+  useEffect(() => {
+    const projectIdFromUrl = searchParams.get('projectId');
+    if (projectIdFromUrl && projectIdFromUrl !== selectedProjectId) {
+      setSelectedProjectId(projectIdFromUrl);
+    }
+  }, [searchParams, selectedProjectId]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -38,7 +48,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
     // Navigate to conversations for the selected project
-    router.push('/admin/conversations');
+    router.push(`/admin/conversations?projectId=${projectId}`);
   };
 
   const handleAddProject = () => {
@@ -87,6 +97,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
             <ProjectSelector
               onProjectChange={handleProjectChange}
               onAddProject={handleAddProject}
+              selectedProjectId={selectedProjectId}
             />
           </div>
 
@@ -157,7 +168,9 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <main className="flex-1">
         {selectedProjectId ? (
-          children
+          React.Children.map(children, (child, index) => 
+            React.cloneElement(child as React.ReactElement, { key: index })
+          )
         ) : (
           <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
             <div className="text-center space-y-4 animate-fade-in">

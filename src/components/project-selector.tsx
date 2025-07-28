@@ -16,12 +16,13 @@ import { Button } from '@/components/ui/button';
 interface ProjectSelectorProps {
   onProjectChange: (projectId: string) => void;
   onAddProject: () => void;
+  selectedProjectId?: string;
 }
 
-export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelectorProps) {
+export function ProjectSelector({ onProjectChange, onAddProject, selectedProjectId }: ProjectSelectorProps) {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('');
+  const [selectedProject, setSelectedProject] = useState<string>(selectedProjectId || '');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,13 @@ export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelect
       fetchProjects();
     }
   }, [user]);
+
+  // Sync with external selectedProjectId prop
+  useEffect(() => {
+    if (selectedProjectId && selectedProjectId !== selectedProject) {
+      setSelectedProject(selectedProjectId);
+    }
+  }, [selectedProjectId, selectedProject]);
 
   const fetchProjects = async () => {
     try {
