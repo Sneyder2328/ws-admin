@@ -35,7 +35,6 @@ export async function GET(
       projectName,
       projectDescription,
       updatedAt,
-      projectId,
       whatsappConfig
     });
     
@@ -55,7 +54,6 @@ interface PrivacyPolicyParams {
   projectName: string;
   projectDescription: string;
   updatedAt: string;
-  projectId: string;
   whatsappConfig?: {
     phoneNumberId: string;
     businessAccountId: string;
@@ -67,7 +65,6 @@ function generatePrivacyPolicy({
   projectName,
   projectDescription,
   updatedAt,
-  projectId,
   whatsappConfig
 }: PrivacyPolicyParams): string {
   return `<!DOCTYPE html>
