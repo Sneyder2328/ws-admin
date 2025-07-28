@@ -36,7 +36,7 @@ export function ProjectSelector({ onProjectChange, onAddProject, selectedProject
     if (selectedProjectId && selectedProjectId !== selectedProject) {
       setSelectedProject(selectedProjectId);
     }
-  }, [selectedProjectId, selectedProject]);
+  }, [selectedProjectId]);
 
   const fetchProjects = async () => {
     try {
@@ -68,8 +68,10 @@ export function ProjectSelector({ onProjectChange, onAddProject, selectedProject
       // Auto-select first project if available and none selected
       if (data.projects?.length > 0 && !selectedProject) {
         const firstProject = data.projects[0];
-        setSelectedProject(firstProject.id);
-        onProjectChange(firstProject.id);
+        if (firstProject.id) {
+          setSelectedProject(firstProject.id);
+          onProjectChange(firstProject.id);
+        }
       }
     } catch (error) {
       console.error('Error fetching projects:', error);

@@ -34,6 +34,7 @@ export async function getUserProjects(userId: string): Promise<Project[]> {
         const projectData = projectDoc.data();
         projects.push({
           ...projectData,
+          id: projectDoc.id, // Explicitly set the document ID
           createdAt: projectData.createdAt.toDate(),
           updatedAt: projectData.updatedAt.toDate(),
         } as Project);

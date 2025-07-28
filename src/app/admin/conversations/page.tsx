@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageSquare, Search, Clock, Phone, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Conversation } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function ConversationsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const projectId = searchParams.get('projectId');
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -21,12 +24,12 @@ export default function ConversationsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (projectId) {
+    if (projectId && user) {
       fetchConversations();
     } else {
       setIsLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, user]);
 
   useEffect(() => {
     // Filter conversations based on search term
@@ -47,7 +50,20 @@ export default function ConversationsPage() {
       setIsLoading(true);
       setError('');
       
-      const response = await fetch(`/api/projects/${projectId}/conversations`);
+      // Get authentication token
+      const token = await user?.getIdToken();
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      const response = await fetch(`/api/projects/${projectId}/conversations`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch conversations');
@@ -163,6 +179,17 @@ export default function ConversationsPage() {
                   : 'Once you configure your WhatsApp Business API and start receiving messages, they will appear here.'
                 }
               </p>
+              {!searchTerm && (
+                <div className="mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => router.push(`/admin/projects/${projectId}/settings`)}
+                    className="transition-apple"
+                  >
+                    Configure WhatsApp Settings
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             filteredConversations.map((conversation) => (

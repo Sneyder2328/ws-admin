@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LogOut, MessageSquare, Settings, User, Loader2 } from 'lucide-react';
+import { LogOut, MessageSquare, Settings, User, Loader2, Cog } from 'lucide-react';
 import { ProjectSelector } from '@/components/project-selector';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { AddProjectModal } from '@/components/add-project-modal';
@@ -55,6 +55,12 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     setShowAddProjectModal(true);
   };
 
+  const handleProjectSettings = () => {
+    if (selectedProjectId) {
+      router.push(`/admin/projects/${selectedProjectId}/settings`);
+    }
+  };
+
   const handleSignOut = async () => {
     await logout();
     router.push('/admin/login');
@@ -99,6 +105,20 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
               onAddProject={handleAddProject}
               selectedProjectId={selectedProjectId}
             />
+
+            {/* Project Settings Button */}
+            {selectedProjectId && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleProjectSettings}
+                className="transition-apple cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                title="Project Settings"
+              >
+                <Cog className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
