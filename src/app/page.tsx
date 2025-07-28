@@ -4,6 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LoginButton } from "@/components/auth/LoginButton";
 import { UserProfile } from "@/components/auth/UserProfile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import dynamic from 'next/dynamic';
+
+const Button = dynamic(() => import('@/components/ui/button').then((mod) => mod.Button), {
+  ssr: false,
+});
 import { Loader2, MessageCircle, Shield, Users } from 'lucide-react';
 
 export default function Home() {
@@ -39,10 +44,19 @@ export default function Home() {
               <h2 className="text-4xl font-bold text-white mb-4">
                 Welcome to your admin panel!
               </h2>
-              <p className="text-xl text-white/70 max-w-2xl mx-auto">
+              <p className="text-xl text-white/70 max-w-2xl mx-auto mb-8">
                 You are successfully logged in and ready to manage your WhatsApp conversations, 
                 analyze user interactions, and maintain your communication platform.
               </p>
+              <div className="flex justify-center gap-4">
+                <Button
+                  onClick={() => window.location.href = '/admin'}
+                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg cursor-pointer hover:opacity-90 transition-opacity duration-300"
+                >
+                  Go to Dashboard
+                </Button>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
