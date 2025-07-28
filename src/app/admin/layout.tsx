@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LogOut, MessageSquare, Settings, User, Loader2, Cog } from 'lucide-react';
@@ -243,5 +243,13 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  return <AdminLayoutContent>{children}</AdminLayoutContent>;
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </Suspense>
+  );
 }
