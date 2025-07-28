@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 
 interface PrivacyPageProps {
-  params: {
+  params: Promise<{
     projectId: string;
-  };
+  }>;
 }
 
-export default function PrivacyPage({ params }: PrivacyPageProps) {
+export default async function PrivacyPage({ params }: PrivacyPageProps) {
+  const { projectId } = await params;
   // Redirect to the API route that generates the HTML privacy policy
-  redirect(`/api/privacy/${params.projectId}`);
+  redirect(`/api/privacy/${projectId}`);
 }
