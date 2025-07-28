@@ -34,21 +34,34 @@ export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelect
     try {
       setIsLoading(true);
       const token = await user?.getIdToken();
+      
+      if (!token) {
+        console.error('No authentication token available');
+        return;
+      }
+
       const response = await fetch('/api/projects', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data.projects || []);
-        
-        // Auto-select first project if available and none selected
-        if (data.projects?.length > 0 && !selectedProject) {
-          const firstProject = data.projects[0];
-          setSelectedProject(firstProject.id);
-          onProjectChange(firstProject.id);
-        }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to fetch projects:', errorData);
+        return;
+      }
+
+      const data = await response.json();
+      setProjects(data.projects || []);
+      
+      // Auto-select first project if available and none selected
+      if (data.projects?.length > 0 && !selectedProject) {
+        const firstProject = data.projects[0];
+        setSelectedProject(firstProject.id);
+        onProjectChange(firstProject.id);
       }
     } catch (error) {
       console.error('Error fetching projects:', error);

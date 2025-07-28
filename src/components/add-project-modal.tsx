@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AddProjectModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function AddProjectModal({ open, onOpenChange, onProjectCreated }: AddPro
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,10 +42,18 @@ export function AddProjectModal({ open, onOpenChange, onProjectCreated }: AddPro
       setIsLoading(true);
       setError('');
 
+      // Get the authentication token
+      const token = await user?.getIdToken();
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: name.trim(),
