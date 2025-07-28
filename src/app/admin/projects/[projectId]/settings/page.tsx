@@ -31,6 +31,7 @@ export default function ProjectSettingsPage() {
     isConfigured: false,
   });
   
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -50,22 +51,26 @@ export default function ProjectSettingsPage() {
     try {
       setIsLoading(true);
       const token = await user?.getIdToken();
-      const response = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
+      
+
+      
+      // Fetch WhatsApp config
+      const whatsappResponse = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
       
-      if (response.ok) {
-        const data = await response.json();
+      if (whatsappResponse.ok) {
+        const data = await whatsappResponse.json();
         if (data.isConfigured && data.config) {
           setConfig({
             ...data.config,
             isConfigured: data.isConfigured,
           });
         }
-      } else if (response.status !== 404) {
-        setError('Failed to load configuration');
+      } else if (whatsappResponse.status !== 404) {
+        setError('Failed to load WhatsApp configuration');
       }
     } catch (error) {
       console.error('Error fetching config:', error);
@@ -80,7 +85,7 @@ export default function ProjectSettingsPage() {
     
     if (!config.accessToken.trim() || !config.webhookVerifyToken.trim() || 
         !config.businessAccountId.trim() || !config.phoneNumberId.trim()) {
-      setError('All fields are required');
+      setError('All WhatsApp fields are required');
       return;
     }
 
@@ -90,7 +95,11 @@ export default function ProjectSettingsPage() {
       setSuccess('');
 
       const token = await user?.getIdToken();
-      const response = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
+      
+
+
+      // Save WhatsApp configuration
+      const whatsappResponse = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,12 +113,12 @@ export default function ProjectSettingsPage() {
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save configuration');
+      if (!whatsappResponse.ok) {
+        const errorData = await whatsappResponse.json();
+        throw new Error(errorData.error || 'Failed to save WhatsApp configuration');
       }
 
-      setSuccess('WhatsApp configuration saved successfully!');
+      setSuccess('Configuration saved successfully!');
       setConfig(prev => ({ ...prev, isConfigured: true }));
       
       // Auto-hide success message after 3 seconds
@@ -170,6 +179,56 @@ export default function ProjectSettingsPage() {
       </div>
 
       {/* WhatsApp Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Settings</CardTitle>
+          <CardDescription>
+            Configure general project settings and policies.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Generated Privacy Policy URL</Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/privacy/${projectId}`}
+                  readOnly
+                  className="transition-apple bg-muted/50"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const url = `${window.location.origin}/api/privacy/${projectId}`;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="shrink-0"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const url = `${window.location.origin}/api/privacy/${projectId}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="shrink-0"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Auto-generated privacy policy for this project. Click copy to copy the URL or the external link to view it.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>WhatsApp Business Configuration</CardTitle>

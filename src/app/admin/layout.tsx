@@ -38,6 +38,8 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     }
   }, [searchParams, selectedProjectId]);
 
+
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -208,6 +210,24 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
           </div>
         )}
       </main>
+
+      {/* Footer */}
+      {selectedProjectId && (
+        <footer className="border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="px-6 py-4">
+            <div className="flex justify-center">
+              <a 
+                href={`/api/privacy/${selectedProjectId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Privacy Policy
+              </a>
+            </div>
+          </div>
+        </footer>
+      )}
 
       {/* Add Project Modal */}
       <AddProjectModal
