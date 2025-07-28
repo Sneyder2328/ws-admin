@@ -13,6 +13,7 @@ import {
   onSnapshot,
   DocumentData
 } from 'firebase/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from './firebase';
 import { adminDb } from './firebase-admin';
 import { User, Project, Conversation, Message, WhatsAppConfig } from './types';
@@ -137,7 +138,7 @@ export async function createProject(userId: string, name: string, description?: 
     // Add project to user's projectIds
     const userRef = adminDb.collection('users').doc(userId);
     await userRef.update({
-      projectIds: require('firebase-admin/firestore').FieldValue.arrayUnion(projectId),
+      projectIds: FieldValue.arrayUnion(projectId),
     });
     
     return projectId;
@@ -209,7 +210,7 @@ export async function createOrUpdateConversation(
       await conversationDoc.ref.update({
         lastMessage,
         lastMessageTimestamp: messageTimestamp,
-        unreadCount: require('firebase-admin/firestore').FieldValue.increment(1),
+        unreadCount: FieldValue.increment(1),
         updatedAt: new Date(),
       });
     } else {
