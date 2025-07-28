@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-utils';
 import { createProject, getUserProjects } from '@/lib/firebase-utils';
 
 // GET /api/projects - List user's projects
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getCurrentUser(request);
     
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const projects = await getUserProjects(session.user.id);
+    const projects = await getUserProjects(user.uid);
     return NextResponse.json({ projects });
   } catch (error) {
     console.error('Error fetching projects:', error);
@@ -23,9 +22,9 @@ export async function GET() {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getCurrentUser(request);
     
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
     }
 
-    const projectId = await createProject(session.user.id, name.trim(), description?.trim());
+    const projectId = await createProject(user.uid, name.trim(), description?.trim());
     
     return NextResponse.json({ 
       success: true, 

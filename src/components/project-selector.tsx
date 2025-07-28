@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, ChevronDown } from 'lucide-react';
 import { Project } from '@/lib/types';
 import {
@@ -19,21 +19,26 @@ interface ProjectSelectorProps {
 }
 
 export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelectorProps) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (session?.user?.id) {
+    if (user) {
       fetchProjects();
     }
-  }, [session?.user?.id]);
+  }, [user]);
 
   const fetchProjects = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/projects');
+      const token = await user?.getIdToken();
+      const response = await fetch('/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setProjects(data.projects || []);

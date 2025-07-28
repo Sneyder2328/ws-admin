@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Copy, Eye, EyeOff, Check, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,8 +20,7 @@ interface WhatsAppConfig {
 export default function ProjectSettingsPage() {
   const params = useParams();
   const router = useRouter();
-  const sessionData = useSession();
-  const { data: session, status } = sessionData || { data: null, status: 'loading' };
+  const { user, loading } = useAuth();
   const projectId = params.projectId as string;
   
   const [config, setConfig] = useState<WhatsAppConfig>({
@@ -42,15 +41,20 @@ export default function ProjectSettingsPage() {
   const webhookUrl = `${process.env.NEXT_PUBLIC_APP_DOMAIN}/api/webhooks/whatsapp/${projectId}`;
 
   useEffect(() => {
-    if (status === 'authenticated' && projectId) {
+    if (user && projectId) {
       fetchConfig();
     }
-  }, [status, projectId]);
+  }, [user, projectId]);
 
   const fetchConfig = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/projects/${projectId}/whatsapp-config`);
+      const token = await user?.getIdToken();
+      const response = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -85,10 +89,12 @@ export default function ProjectSettingsPage() {
       setError('');
       setSuccess('');
 
+      const token = await user?.getIdToken();
       const response = await fetch(`/api/projects/${projectId}/whatsapp-config`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           accessToken: config.accessToken.trim(),
@@ -133,7 +139,7 @@ export default function ProjectSettingsPage() {
     }
   };
 
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -141,7 +147,7 @@ export default function ProjectSettingsPage() {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 

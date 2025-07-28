@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { signIn, getSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,31 +9,23 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const { user, loading, signInWithGoogle } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') || '/admin/conversations';
 
   useEffect(() => {
     // Check if user is already authenticated
-    getSession().then((session) => {
-      if (session) {
-        router.push(from);
-      }
-      setIsCheckingSession(false);
-    });
-  }, [router, from]);
+    if (!loading && user) {
+      router.push(from);
+    }
+  }, [user, loading, router, from]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
-      const result = await signIn('google', {
-        callbackUrl: from,
-      });
-      
-      if (result?.error) {
-        console.error('Sign in error:', result.error);
-      }
+      await signInWithGoogle();
+      // signInWithGoogle will automatically redirect via the useEffect above
     } catch (error) {
       console.error('Sign in failed:', error);
     } finally {
@@ -41,7 +33,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isCheckingSession) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

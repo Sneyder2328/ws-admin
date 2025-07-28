@@ -1,39 +1,17 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isAuth = !!token;
-    const isAuthPage = req.nextUrl.pathname.startsWith('/admin/login');
-    const isAdminPage = req.nextUrl.pathname.startsWith('/admin') && !isAuthPage;
+export function middleware(request: NextRequest) {
+  const isAuthPage = request.nextUrl.pathname.startsWith('/admin/login');
+  const isAdminPage = request.nextUrl.pathname.startsWith('/admin') && !isAuthPage;
 
-    if (isAuthPage) {
-      if (isAuth) {
-        return NextResponse.redirect(new URL('/admin/conversations', req.url));
-      }
-      return null;
-    }
-
-    if (isAdminPage && !isAuth) {
-      let from = req.nextUrl.pathname;
-      if (req.nextUrl.search) {
-        from += req.nextUrl.search;
-      }
-
-      return NextResponse.redirect(
-        new URL(`/admin/login?from=${encodeURIComponent(from)}`, req.url)
-      );
-    }
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => {
-        return true; // We handle authorization in the middleware function
-      },
-    },
+  // For admin pages, let the client-side Firebase Auth handle authentication
+  // This is simpler and more reliable than trying to verify tokens in middleware
+  if (isAuthPage || isAdminPage) {
+    return NextResponse.next();
   }
-);
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ['/admin/:path*']

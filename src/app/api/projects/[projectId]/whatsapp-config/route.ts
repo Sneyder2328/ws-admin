@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-utils';
 import { saveWhatsAppConfig, getWhatsAppConfig } from '@/lib/firebase-utils';
 import { adminDb } from '@/lib/firebase-admin';
 
@@ -23,14 +22,14 @@ export async function GET(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getCurrentUser(request);
     
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { projectId } = await params;
-    const hasAccess = await verifyProjectAccess(session.user.id, projectId);
+    const hasAccess = await verifyProjectAccess(user.uid, projectId);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 403 });
     }
@@ -66,14 +65,14 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const user = await getCurrentUser(request);
     
-    if (!session?.user?.id) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { projectId } = await params;
-    const hasAccess = await verifyProjectAccess(session.user.id, projectId);
+    const hasAccess = await verifyProjectAccess(user.uid, projectId);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 403 });
     }

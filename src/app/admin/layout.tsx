@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut, SessionProvider } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { LogOut, MessageSquare, Settings, User, Loader2 } from 'lucide-react';
 import { ProjectSelector } from '@/components/project-selector';
@@ -23,18 +23,17 @@ interface AdminLayoutProps {
 }
 
 function AdminLayoutContent({ children }: AdminLayoutProps) {
-  const sessionData = useSession();
-  const { data: session, status } = sessionData || { data: null, status: 'loading' };
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/admin/login');
     }
-  }, [status, router]);
+  }, [user, loading, router]);
 
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -47,7 +46,8 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/admin/login' });
+    await logout();
+    router.push('/admin/login');
   };
 
   const getUserInitials = (name: string) => {
@@ -59,7 +59,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
       .slice(0, 2);
   };
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -67,7 +67,7 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return null; // Will redirect in useEffect
   }
 
@@ -103,11 +103,11 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage
-                      src={session.user.image || ''}
-                      alt={session.user.name || ''}
+                      src={user.photoURL || ''}
+                      alt={user.displayName || ''}
                     />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {getUserInitials(session.user.name || 'U')}
+                      {getUserInitials(user.displayName || 'U')}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -116,10 +116,10 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {session.user.name}
+                      {user.displayName}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {session.user.email}
+                      {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -190,9 +190,5 @@ function AdminLayoutContent({ children }: AdminLayoutProps) {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  return (
-    <SessionProvider>
-      <AdminLayoutContent>{children}</AdminLayoutContent>
-    </SessionProvider>
-  );
+  return <AdminLayoutContent>{children}</AdminLayoutContent>;
 }
