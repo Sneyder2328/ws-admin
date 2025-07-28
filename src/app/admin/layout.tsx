@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { LogOut, MessageSquare, Settings, User, Loader2 } from 'lucide-react';
 import { ProjectSelector } from '@/components/project-selector';
@@ -22,8 +22,9 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { data: session, status } = useSession();
+function AdminLayoutContent({ children }: AdminLayoutProps) {
+  const sessionData = useSession();
+  const { data: session, status } = sessionData || { data: null, status: 'loading' };
   const router = useRouter();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
@@ -185,5 +186,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }}
       />
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <SessionProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </SessionProvider>
   );
 }
