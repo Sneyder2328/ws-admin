@@ -73,13 +73,20 @@ export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelect
 
   return (
     <div className="flex items-center space-x-2">
-      <Select value={selectedProject} onValueChange={handleProjectChange}>
-        <SelectTrigger className="w-48 transition-apple">
+      <Select 
+        value={selectedProject} 
+        onValueChange={handleProjectChange}
+      >
+        <SelectTrigger className="w-48 transition-apple cursor-pointer hover:bg-accent hover:text-accent-foreground">
           <SelectValue placeholder="Select a project" />
         </SelectTrigger>
         <SelectContent>
           {projects.map((project) => (
-            <SelectItem key={project.id} value={project.id}>
+            <SelectItem 
+              key={project.id} 
+              value={project.id} 
+              className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+            >
               <div className="flex flex-col">
                 <span className="font-medium">{project.name}</span>
                 {project.description && (
@@ -91,7 +98,11 @@ export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelect
             </SelectItem>
           ))}
           {projects.length === 0 && (
-            <SelectItem value="" disabled>
+            <SelectItem 
+              value="no-projects" 
+              disabled 
+              className="cursor-not-allowed opacity-50"
+            >
               No projects found
             </SelectItem>
           )}
@@ -102,7 +113,7 @@ export function ProjectSelector({ onProjectChange, onAddProject }: ProjectSelect
         variant="outline"
         size="icon"
         onClick={onAddProject}
-        className="transition-apple"
+        className="transition-apple cursor-pointer hover:bg-accent hover:text-accent-foreground"
         title="Add new project"
       >
         <Plus className="h-4 w-4" />
