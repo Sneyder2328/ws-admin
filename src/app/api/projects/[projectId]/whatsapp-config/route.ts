@@ -20,7 +20,7 @@ async function verifyProjectAccess(userId: string, projectId: string): Promise<b
 // GET /api/projects/[projectId]/whatsapp-config
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,12 +29,13 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const hasAccess = await verifyProjectAccess(session.user.id, params.projectId);
+    const { projectId } = await params;
+    const hasAccess = await verifyProjectAccess(session.user.id, projectId);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 403 });
     }
 
-    const config = await getWhatsAppConfig(params.projectId);
+    const config = await getWhatsAppConfig(projectId);
     
     if (!config) {
       return NextResponse.json({ 
@@ -62,7 +63,7 @@ export async function GET(
 // POST /api/projects/[projectId]/whatsapp-config
 export async function POST(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -71,7 +72,8 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const hasAccess = await verifyProjectAccess(session.user.id, params.projectId);
+    const { projectId } = await params;
+    const hasAccess = await verifyProjectAccess(session.user.id, projectId);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 403 });
     }
@@ -85,7 +87,7 @@ export async function POST(
       }, { status: 400 });
     }
 
-    await saveWhatsAppConfig(params.projectId, {
+    await saveWhatsAppConfig(projectId, {
       accessToken: accessToken.trim(),
       webhookVerifyToken: webhookVerifyToken.trim(),
       businessAccountId: businessAccountId.trim(),

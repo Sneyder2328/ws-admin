@@ -19,7 +19,7 @@ async function verifyProjectAccess(userId: string, projectId: string): Promise<b
 // GET /api/projects/[projectId]/conversations
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -28,7 +28,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const hasAccess = await verifyProjectAccess(session.user.id, params.projectId);
+    const { projectId } = await params;
+    const hasAccess = await verifyProjectAccess(session.user.id, projectId);
     if (!hasAccess) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 403 });
     }
@@ -39,7 +40,7 @@ export async function GET(
 
     const conversationsRef = adminDb
       .collection('projects')
-      .doc(params.projectId)
+      .doc(projectId)
       .collection('conversations');
 
     let query = conversationsRef
